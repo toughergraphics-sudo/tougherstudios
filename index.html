@@ -180,13 +180,15 @@ header{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:1000;displa
 
 <div id="lb"><button class="x" id="lbX">CLOSE ✕</button><div class="box"><div class="media" id="lbMedia"></div><div class="cap"><div class="c" id="lbCat"></div><div class="tt" id="lbTtl"></div><div class="nt" id="lbNt"></div></div></div></div>
 
-<div id="book"><div class="bk-bg" id="bkBg"></div><div class="bk-card"><div class="bk-h"><button class="p-close" id="bkClose">CLOSE ✕</button><div class="t">Bring The Vision</div><p>Tell us what you're building. We'll shape the next step. No pressure, no jargon.</p></div><div class="bk-b">
-  <div class="fld"><label>Your Name</label><input id="f_name" placeholder="Name"></div><div class="fld"><label>Email</label><input id="f_email" placeholder="you@email.com"></div>
-  <div class="fld"><label>What Are You Building?</label><input id="f_build" placeholder="A single, a brand, a business, content..."></div>
-  <div class="fld"><label>Budget Range</label><div class="chips" id="chips"><button>Under $250</button><button>$250 to $500</button><button>$500 to $1,000</button><button>$1,000+</button><button>Not sure yet</button></div></div>
-  <button class="btn" id="sendBtn">Send It To The Studio →</button>
-  <p style="font-family:var(--ff-m);font-size:10px;letter-spacing:.08em;color:var(--warmgray);margin-top:14px;line-height:1.7">Opens your email to info@tougherstudios.com. A live form gets wired in next.</p>
-</div></div></div>
+<div id="book"><div class="bk-bg" id="bkBg"></div><div class="bk-card"><div class="bk-h"><button class="p-close" id="bkClose" type="button">CLOSE ✕</button><div class="t">Bring The Vision</div><p>Tell us what you're building. We'll shape the next step. No pressure, no jargon.</p></div><form class="bk-b" id="projectForm" action="https://formspree.io/f/mrenzagz" method="POST">
+  <input type="hidden" name="_subject" value="New Tougher Studios Project Inquiry">
+  <input type="hidden" name="budget" id="f_budget" value="">
+  <div class="fld"><label for="f_name">Your Name</label><input id="f_name" name="name" placeholder="Name" required></div><div class="fld"><label for="f_email">Email</label><input id="f_email" name="email" type="email" placeholder="you@email.com" required></div>
+  <div class="fld"><label for="f_build">What Are You Building?</label><input id="f_build" name="project" placeholder="A single, a brand, a business, content..." required></div>
+  <div class="fld"><label>Budget Range</label><div class="chips" id="chips"><button type="button">Under $250</button><button type="button">$250 to $500</button><button type="button">$500 to $1,000</button><button type="button">$1,000+</button><button type="button">Not sure yet</button></div></div>
+  <button class="btn" id="sendBtn" type="submit">Send It To The Studio →</button>
+  <p id="formStatus" role="status" style="font-family:var(--ff-m);font-size:10px;letter-spacing:.08em;color:var(--warmgray);margin-top:14px;line-height:1.7">Your inquiry will be sent directly to info@tougherstudios.com.</p>
+</form></div></div>
 
 <div id="drawer"><button class="x" id="drawerX">CLOSE ✕</button><button data-open="archive">Work</button><button data-open="services">Services</button><button data-open="start">Start Here</button><button data-open="beats">Beats</button><button data-open="about">About</button><button data-open="faq">FAQ</button><button id="drawerBook">Start Your Project</button></div>
 <div class="mcta"><button class="btn" id="mctaBook">Start Your Project</button></div>
@@ -346,8 +348,23 @@ window.openBook=(prefill)=>{if(prefill&&typeof prefill==='string'){document.getE
 window.closeBook=()=>book.classList.remove('open');
 ['bookOpen','mctaBook','drawerBook'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',()=>{closeDrawer();openBook();});});
 document.getElementById('bkClose').addEventListener('click',closeBook);document.getElementById('bkBg').addEventListener('click',closeBook);
-let budget='';document.querySelectorAll('#chips button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#chips button').forEach(x=>x.classList.remove('on'));b.classList.add('on');budget=b.textContent;}));
-document.getElementById('sendBtn').addEventListener('click',()=>{const n=f_name.value,e=f_email.value,bld=f_build.value;location.href=`mailto:hello@tougherstudios.com?subject=${encodeURIComponent('New Project · '+(n||'Tougher Studios'))}&body=${encodeURIComponent('Name: '+n+'\nEmail: '+e+'\nBuilding: '+bld+'\nBudget: '+budget)}`;});
+let budget='';document.querySelectorAll('#chips button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#chips button').forEach(x=>x.classList.remove('on'));b.classList.add('on');budget=b.textContent;document.getElementById('f_budget').value=budget;}));
+const projectForm=document.getElementById('projectForm');
+const formStatus=document.getElementById('formStatus');
+projectForm.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const sendBtn=document.getElementById('sendBtn');
+ sendBtn.disabled=true;sendBtn.textContent='Sending...';formStatus.textContent='Sending your inquiry...';
+ try{
+  const response=await fetch(projectForm.action,{method:'POST',body:new FormData(projectForm),headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('Submission failed');
+  projectForm.reset();budget='';document.querySelectorAll('#chips button').forEach(x=>x.classList.remove('on'));
+  formStatus.textContent='Received. Tougher Studios will contact you soon.';sendBtn.textContent='Inquiry Sent ✓';
+  setTimeout(()=>{sendBtn.disabled=false;sendBtn.textContent='Send It To The Studio →';},3500);
+ }catch(_){
+  formStatus.textContent='Something went wrong. Please email info@tougherstudios.com.';sendBtn.disabled=false;sendBtn.textContent='Try Again →';
+ }
+});
 
 const drawer=document.getElementById('drawer');
 document.getElementById('burger').addEventListener('click',()=>drawer.classList.add('open'));
